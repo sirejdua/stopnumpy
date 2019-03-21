@@ -15,6 +15,12 @@ def transpose2(M):
         lst.append(M[:,i])
     return np.array(lst)
 
+def transpose3(M):
+    lst = []
+    for i in M:
+        lst.append(M[i])
+    return np.array(lst).T
+
 def fast_transpose(M):
     return M.T
 
@@ -24,6 +30,8 @@ if __name__ == '__main__':
 
     if (sys.argv[1] == "2"):
         transpose2(M)
+    elif (sys.argv[1] == "3"):
+        transpose3(M)
     elif (sys.argv[1] == "fast"):
         fast_transpose(M)
     else:
