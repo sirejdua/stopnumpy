@@ -9,6 +9,7 @@
 
 ; Syntax for DSL
 (struct transpose (arg) #:transparent)
+(struct dot (arg1 arg2) #:transparent)
 
 
 ; Interpreter for our DSL.
@@ -16,6 +17,7 @@
 (define (interpret p)
   (match p
     [(transpose a)  (matrix-transpose (interpret a))]
+    [(dot a b) (matrix-dot (interpret a) (interpret b))]
     [_ p]))
 
 
@@ -23,7 +25,9 @@
 ; possible values.
 (define (??expr terminals)
   (define a (apply choose* terminals))
-  (choose* (transpose a)
+  (define b (apply choose* terminals))
+  (choose* (dot a b)
+           (transpose a)
            a))
 
 
@@ -32,14 +36,14 @@
   i)
 
 ; Variables 
-(define x (build-matrix 2 2 make-int))
+(define x (build-matrix 2 1 make-int))
 
 
 (define sketch
   (??expr (list x)))
 
 (define prog
-  (transpose (transpose (transpose x))))
+  (dot x x))
 
 (define M
   (synthesize
