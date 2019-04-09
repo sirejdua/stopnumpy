@@ -2,7 +2,7 @@
 
 (require rosette/lib/angelic  ; provides `choose*`
          rosette/lib/match    ; provides `match`
-         math/array           ; matrix support
+         math/matrix           ; matrix support
          )
 ; Tell Rosette we really do want to use integers.
 (current-bitwidth #f)
@@ -15,7 +15,7 @@
 ; We just recurse on the program's syntax using pattern matching.
 (define (interpret p)
   (match p
-    [(transpose a)  (array-axis-swap (interpret a) 0 1)]
+    [(transpose a)  (matrix-transpose (interpret a))]
     [_ p]))
 
 
@@ -27,19 +27,19 @@
            a))
 
 
-(define (make-int x)
+(define (make-int x y)
   (define-symbolic* i integer?)
   i)
 
 ; Variables 
-(define x (build-array #(2 2) make-int))
+(define x (build-matrix 2 2 make-int))
 
 
 (define sketch
   (??expr (list x)))
 
 (define prog
-  (transpose x))
+  (transpose (transpose (transpose x))))
 
 (define M
   (synthesize
