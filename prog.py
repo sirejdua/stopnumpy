@@ -1,13 +1,12 @@
 #lang python
 
 # cpyimport numpy as np
+cpyimport pdb
 import predicates
 
-# class rkarray(np.ndarray):
-	
-
-# predicates.set_predicate(list, list)
+# class Array(object):
+# 	x = property()
 
 def transpose_py(n):
-	print(n)
-	# return np.transpose(n)
+	print n
+	return n

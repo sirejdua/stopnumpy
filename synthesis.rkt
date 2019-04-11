@@ -12,9 +12,11 @@
 ; Only needs to be done once
 ;(enable-cpyimport!)
 
+(define y (array #[#[1 2]#[3 4]]))
+
 ; Import python module
 (py-import "prog" as python-module)
-(py-method-call python-module "transpose_py" "Hello")
+(py-method-call python-module "transpose_py" y)
 
 ; Syntax for DSL
 (struct transpose (arg) #:transparent)
@@ -49,7 +51,7 @@
   (??expr (list x)))
 
 (define prog
-  (array-axis-swap x 0 1))
+  (py-method-call python-module "transpose_py" x))
 
 (define M
   (synthesize
