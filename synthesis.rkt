@@ -2,22 +2,29 @@
 
 (require rosette/lib/angelic  ; provides `choose*`
          rosette/lib/match    ; provides `match`
-         math/matrix           ; matrix support
+         math/array           ; matrix support
+         (only-in python py-import py-method-call)
+         ;python/config
          )
 ; Tell Rosette we really do want to use integers.
 (current-bitwidth #f)
 
+; Only needs to be done once
+;(enable-cpyimport!)
+
+; Import python module
+(py-import "prog" as python-module)
+(py-method-call python-module "transpose_py" "Hello")
+
 ; Syntax for DSL
 (struct transpose (arg) #:transparent)
-(struct dot (arg1 arg2) #:transparent)
 
 
 ; Interpreter for our DSL.
 ; We just recurse on the program's syntax using pattern matching.
 (define (interpret p)
   (match p
-    [(transpose a)  (matrix-transpose (interpret a))]
-    [(dot a b) (matrix-dot (interpret a) (interpret b))]
+    [(transpose a)  (array-axis-swap (interpret a) 0 1)]
     [_ p]))
 
 
@@ -25,30 +32,29 @@
 ; possible values.
 (define (??expr terminals)
   (define a (apply choose* terminals))
-  (define b (apply choose* terminals))
-  (choose* (dot a b)
-           (transpose a)
+  (choose* (transpose a)
            a))
 
 
-(define (make-int x y)
+(define (make-int x)
   (define-symbolic* i integer?)
   i)
 
 ; Variables 
-(define x (build-matrix 2 1 make-int))
+(define x 
+  (build-array #(2 2) make-int))
 
 
 (define sketch
   (??expr (list x)))
 
 (define prog
-  (transpose x))
+  (array-axis-swap x 0 1))
 
 (define M
   (synthesize
     #:forall (list x)
-    #:guarantee (assert (equal? (interpret sketch) (interpret prog)))))
+    #:guarantee (assert (equal? (interpret sketch) prog))))
 
 M
 
