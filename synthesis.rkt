@@ -20,26 +20,42 @@
 
 ; Syntax for DSL
 (struct transpose (arg)        #:transparent)
-(struct sum (arg)              #:transparent)
-(struct dot (arg1 arg2)      #:transparent)
-(struct element* (arg1 arg2) #:transparent)
-(struct element+ (arg1 arg2) #:transparent)
-(struct extend (arg1 arg2)   #:transparent)
-(struct eye (arg)              #:transparent)
+(struct sum (arg)                #:transparent)
+;(struct dot (arg1 arg2)          #:transparent)
+(struct element* (arg1 arg2)     #:transparent)
+(struct element+ (arg1 arg2)     #:transparent)
+;(struct extend (arg1 arg2)       #:transparent)
+(struct matmul (arg1) (arg2)     #:transparent)
+(struct slice-col (arg1) (arg2)  #:transparent)
+(struct eye-like (arg)           #:transparent)
+(struct eye-like-squares (arg)   #:transparent)
+(struct zeros-like (arg)         #:transparent)
+(struct ones-like (arg)          #:transparent)
 
 
 
 ; Interpreter for our DSL.
 ; We just recurse on the program's syntax using pattern matching.
+
+
+; TODO use lists instead of arrays?
 (define (interpret p)
   (match p
-    [(transpose a)    (array-axis-swap (interpret a) 0 1)]
-    [(sum a)          (apply + (array->list (interpret a)))]
-    [(element* a b)   (map * (array->list (interpret a) (array->list (interpret b))))]
-    [(element+ a b)   (map + (array->list (interpret a) (array->list (interpret b))))]
-    [(dot a b)        (sum (element* (interpret a) (interpret b)))]
-    [(extend a b)     (array-list->array (list (interpret a) (interpret b)))]
-    [(eye n)          (build-array #(n n) (lambda (ids) (if (equal? (vector-ref ids 0) (vector-ref ids 1)) 1 0 )))  ]
+    [(transpose a)         (array-axis-swap (interpret a) 0 1)]
+    [(sum a)               (list (list (apply + (interpret a))))]
+    [(element* a b)        (map * (array->list (interpret a) (array->list (interpret b))))]
+    [(element+ a b)        (map + (array->list (interpret a) (array->list (interpret b))))]
+    ;[(dot a b)             (sum (element* (interpret a) (interpret b)))]
+    ;[(extend a b)          (array-list->array (list (interpret a) (interpret b)))]
+    [(eye-like a)          (build-list (length a) (lambda (index) (build-list (length (car a)) (lambda (index2) (if (equals? index index2) 1 0)))))]
+    [(eye-like-squares a)  (build-list (length a) (lambda (index) (build-list (length a)       (lambda (index2) (if (equals? index index2) 1 0)))))]
+    [(zeros-like a)        (build-list (length a) (lambda (index) (build-list (length (car a)) (lambda (index2) 0 ))))  ]
+    [(ones-like a)         (build-list (length a) (lambda (index) (build-list (length (car a)) (lambda (index2) 1 ))))  ]
+    [(matmul a b)     (let a_ = (interpret a), b_ = (interpret b) in
+                        (if 
+                          (equals? (vector-ref (array-shape a_) 1) (vector-ref (array_shape b_) 0))
+                          (map dot a_ (transpose b_)) 
+                          (assert #f) )]
     [_ p]))
 
 
@@ -52,9 +68,14 @@
            (sum a)
            (element* a b)
            (element+ a b)
-           (dot a b)
-           (extend a b)
-           ;(eye a)
+;           (dot a b)
+;           (extend a b)
+           (eye a)
+           (eye-like a)
+           (eye-like-squares a)
+           (zeros-like a)
+           (ones-like a)
+           (matmul a b)
            a))
 
 
