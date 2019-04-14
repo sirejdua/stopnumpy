@@ -12,11 +12,11 @@
 ; Only needs to be done once
 ;(enable-cpyimport!)
 
-(define y (array #[#[1 2]#[3 4]]))
-
 ; Import python module
 (py-import "prog" as python-module)
-(py-method-call python-module "transpose_py" y)
+(py-method-call python-module "destruct" 
+  (py-method-call python-module "construct" (list (list 1 2) (list 3 4))))
+
 
 ; Syntax for DSL
 (struct transpose (arg) #:transparent)
@@ -26,7 +26,7 @@
 ; We just recurse on the program's syntax using pattern matching.
 (define (interpret p)
   (match p
-    [(transpose a)  (array-axis-swap (interpret a) 0 1)]
+    [(transpose a)  (apply map list (interpret a))]
     [_ p]))
 
 
@@ -37,21 +37,21 @@
   (choose* (transpose a)
            a))
 
-
-(define (make-int x)
-  (define-symbolic* i integer?)
-  i)
+(define-symbolic* a11 integer?)
+(define-symbolic* a12 integer?)
+(define-symbolic* a21 integer?)
+(define-symbolic* a22 integer?)
 
 ; Variables 
 (define x 
-  (build-array #(2 2) make-int))
+  (list (list a11 a12) (list a21 a22)))
 
 
 (define sketch
   (??expr (list x)))
 
-(define prog
-  (py-method-call python-module "transpose_py" x))
+(define (prog x)
+  (py-method-call python-module "transpose" x))
 
 (define M
   (synthesize
