@@ -37,25 +37,31 @@
 ; Interpreter for our DSL.
 ; We just recurse on the program's syntax using pattern matching.
 
+(define (index a i j) (list-ref (list-ref a i) j))
+(define (elementwise a b op) (let a_ = (interpret a), b_ = (interpret b) in
+                             (if 
+                               (and (equals? (length a_) (length b_)) (equals? (length (car a_)) (length (car b_))))
+                               (build-list (length a_)  (lambda (i) (build-list (length (car a_)) (lambda (j) (op (index a_ i j) (index b_ i j)  ))))) 
+                               (assert #f) )))
 
 ; TODO use lists instead of arrays?
 (define (interpret p)
   (match p
     [(transpose a)         (array-axis-swap (interpret a) 0 1)]
     [(sum a)               (list (list (apply + (interpret a))))]
-    [(element* a b)        (map * (array->list (interpret a) (array->list (interpret b))))]
-    [(element+ a b)        (map + (array->list (interpret a) (array->list (interpret b))))]
+    [(element* a b)        (elementwise a b *)]
+    [(element+ a b)        (elementwise a b +)]
     ;[(dot a b)             (sum (element* (interpret a) (interpret b)))]
     ;[(extend a b)          (array-list->array (list (interpret a) (interpret b)))]
-    [(eye-like a)          (build-list (length a) (lambda (index) (build-list (length (car a)) (lambda (index2) (if (equals? index index2) 1 0)))))]
-    [(eye-like-squares a)  (build-list (length a) (lambda (index) (build-list (length a)       (lambda (index2) (if (equals? index index2) 1 0)))))]
-    [(zeros-like a)        (build-list (length a) (lambda (index) (build-list (length (car a)) (lambda (index2) 0 ))))  ]
-    [(ones-like a)         (build-list (length a) (lambda (index) (build-list (length (car a)) (lambda (index2) 1 ))))  ]
-    [(matmul a b)     (let a_ = (interpret a), b_ = (interpret b) in
-                        (if 
-                          (equals? (vector-ref (array-shape a_) 1) (vector-ref (array_shape b_) 0))
-                          (map dot a_ (transpose b_)) 
-                          (assert #f) )]
+    [(eye-like a)          (build-list (length a) (lambda (id) (build-list (length (car a)) (lambda (id2) (if (equals? id id2) 1 0)))))]
+    [(eye-like-squares a)  (build-list (length a) (lambda (id) (build-list (length a)       (lambda (id2) (if (equals? id id2) 1 0)))))]
+    [(zeros-like a)        (build-list (length a) (lambda (id) (build-list (length (car a)) (lambda (id2) 0 ))))  ]
+    [(ones-like a)         (build-list (length a) (lambda (id) (build-list (length (car a)) (lambda (id2) 1 ))))  ]
+    [(matmul a b)          (let a_ = (interpret a), b_ = (transpose (interpret b)) in
+                             (if 
+                               (equals? (length (car a_)) (length b_))
+                               (build-list (length a_) (lambda (i) (build-list (length b_) (lambda (j) (apply + (element* (list-ref a_ i) (list-ref b_ j)))))))
+                               (assert #f) ))]
     [_ p]))
 
 
