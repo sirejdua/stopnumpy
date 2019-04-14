@@ -39,12 +39,6 @@
 
 (define (index a i j) (list-ref (list-ref a i) j))
 (define (elementwise a b op) (for/list ([i (interpret a)] [j (interpret b)]) (for/list ([a i] [b j]) (op a b))))
-;(define (elementwise a b op) (let a_ = (interpret a), b_ = (interpret b) in
-;                             (if 
-;                               (and (equals? (length a_) (length b_)) (equals? (length (car a_)) (length (car b_))))
-;                               (build-list (length a_)  (lambda (i) (build-list (length (car a_)) (lambda (j) (op (index a_ i j) (index b_ i j)  ))))) 
-;                               (assert #f) )))
-
 ; TODO use lists instead of arrays?
 (define (interpret p)
   (match p
@@ -62,14 +56,6 @@
                              (build-list (length a_) (lambda (id) (build-list (length (car a_)) (lambda (id2) 0 )))))  ]
     [(ones-like a)         (let ([a_ (interpret a)])
                              (build-list (length a_) (lambda (id) (build-list (length (car a_)) (lambda (id2) 1 )))))  ]
-
-
-    ;    [(matmul a b)          (let a_ = (interpret a), b_ = (transpose (interpret b)) in
-;                             (if 
-;                               (equals? (length (car a_)) (length b_))
-;                               (build-list (length a_) (lambda (i) (build-list (length b_) (lambda (j) (apply + (element* (list-ref a_ i) (list-ref b_ j)))))))
-;                               (assert #f) ))]
-;    [(matmul a b)          (for/list ([i (interpret a)] [j (interpret (transpose b))]) (for/fold ([sum 0]) ([c i] [d j]) (+ sum (+ c d))))]
     [(matmul a b)          (for/list ([i (interpret a)]) (for/list ([j (interpret (transpose b))]) (for/fold ([sum 0]) ([c i] [d j]) (+ sum (* c d)))))]
     [_ p]))
 
@@ -77,8 +63,8 @@
 ; Create an unknown expression -- one that can evaluate to several
 ; possible values.
 (define (??expr terminals)
-  (define a (apply choose* terminals))
-  (define b (apply choose* terminals))
+  (define a (apply choose* (??expr terminals) terminals))
+  (define b (apply choose* (??expr terminals) terminals))
   (choose* (transpose a)
            (sum a)
            (element* a b)
@@ -101,8 +87,8 @@
 
 ; Variables 
 (define x (make-list 2))
-;(define y (make-array 2))
-;(define z (make-array 2))
+;(define y (make-list 2))
+;(define z (make-list 2))
 ;(define a (make-int a))
 ;(define b (make-int b))
 ;(define c (make-int c))
@@ -111,8 +97,10 @@
 (define sketch
   (??expr (list x)))
 
+;(define prog
+;  (py-method-call python-module "transpose_py" x))
 (define prog
-  (py-method-call python-module "transpose_py" x))
+  (matmul (element+ (eye-like x) (ones-like x)) x ))
 
 (define M
   (synthesize
@@ -123,6 +111,6 @@ M
 
 ; Substitute the bindings in M into the sketch to get back the
 ; synthesized program.
-(evaluate sketch M)
+;(evaluate sketch M)
 
-(interpret (matmul (eye-like x) x))
+;(interpret (matmul (eye-like x) x))
