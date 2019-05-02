@@ -22,7 +22,6 @@ def ogis(oracle):
 
         example = find_dist_constraint(ex_set, program_candidate, components)
 
-
 def synthesize(examples, components):
     return None
 
