@@ -3,15 +3,12 @@ import numpy as np
 
 # OGIS
 
-def main():
-    oracle = some_func
+def ogis(oracle):
     ex_set = {}
 
-    components = []
-    populate_components()
+    components = {'transpose': 0, 'eye-like': 0, 'ones-like': 0, 'multiply': 0, 'add': 0}
 
     example = np.ones((2,2))
-
 
     while example is not None:
         ex_set[example] = oracle(example)
@@ -24,6 +21,17 @@ def main():
 
 
         example = find_dist_constraint(ex_set, program_candidate, components)
+
+
+def synthesize(examples, components):
+    return None
+
+def find_dist_constraint(examples, program_candidate, components):
+    return None
+
+
+def main():
+    return ogis(somefunc)
 
 
 if __name__ == '__main__':
