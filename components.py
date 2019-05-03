@@ -1,5 +1,4 @@
 import z3
-import itertools as it
 
 class Components:
     component_num = 0
@@ -10,13 +9,54 @@ class Components:
     # what other functionos should a components class be?
         return
 
+    def eye_like(shape):
+        I = [[[z3.Int(f'mult_i1_{i}_{j}') for j in range(shape[1])] for i in range(shape[0])]]
+        O = [[z3.Int(f'mult_o_{i}_{j}') for j in range(shape[1])] for i in range(shape[0])]
+        phi = []
+        for row in range(shape[0]):
+            for col in range(shape[1]):
+                if row == col:
+                    phi.append(z3.And(O[row][col] == z3.Int(1)))
+                else:
+                    phi.append(z3.And(O[row][col] == z3.Int(0)))
+        return (I, O, phi)
+    
+    def ones_like(shape):
+        I = [[[z3.Int(f'mult_i1_{i}_{j}') for j in range(shape[1])] for i in range(shape[0])]]
+        O = [[z3.Int(f'mult_o_{i}_{j}') for j in range(shape[1])] for i in range(shape[0])]
+        phi = []
+        for row in range(shape[0]):
+            for col in range(shape[1]):
+                phi.append(z3.And(O[row][col] == z3.Int(1)))
+        return (I, O, phi)
+
     def transpose(shape):
         I = [[[z3.Int(f'tranpose_i_{i}_{j}') for j in range(shape[1])] for i in range(shape[0])]] # row major
         O = [[z3.Int(f'tranpose_o_{j}_{i}') for i in range(shape[0])] for j in range(shape[1])]
         phi = []
         for row in range(shape[0]):
             for col in range(shape[1]):
-                phi.append(z3.And(I[0][row][col] == O[col][row]))
+                phi.append(z3.And(O[col][row] == I[0][row][col]))
+        return (I, O, phi)
+
+    def multiply(shape):
+        I = [[[z3.Int(f'mult_i1_{i}_{j}') for j in range(shape[1])] for i in range(shape[0])],
+             [[z3.Int(f'mult_i2_{i}_{j}') for j in range(shape[1])] for i in range(shape[0])]]
+        O = [[z3.Int(f'mult_o_{i}_{j}') for j in range(shape[1])] for i in range(shape[0])]
+        phi = []
+        for row in range(shape[0]):
+            for col in range(shape[1]):
+                phi.append(z3.And(O[row][col] == I[0][row][col] * I[1][row][col]))
+        return (I, O, phi)
+
+    def add(shape):
+        I = [[[z3.Int(f'mult_i1_{i}_{j}') for j in range(shape[1])] for i in range(shape[0])],
+             [[z3.Int(f'mult_i2_{i}_{j}') for j in range(shape[1])] for i in range(shape[0])]]
+        O = [[z3.Int(f'mult_o_{i}_{j}') for j in range(shape[1])] for i in range(shape[0])]
+        phi = []
+        for row in range(shape[0]):
+            for col in range(shape[1]):
+                phi.append(z3.And(O[row][col] == I[0][row][col] + I[1][row][col]))
         return (I, O, phi)
 
     def matmul(shape1, shape2):
@@ -32,18 +72,3 @@ class Components:
                     n += I[0][row][inner] * I[1][inner][col]
                 phi.append(z3.And(O[row][col] == n))
         return (I, O, phi)
-
-    def multiply(shape):
-        return
-
-    def add(shape):
-        return
-
-    def eye_like(shape):
-        return
-    
-    def ones_like(shape):
-        return [z3.Int("o_%s_%s_%s".format(component_num, i, j))  for i in range(shape[0]) for j in range(shape[1])]
-
-Components.transpose((2,3))
-Components.matmul((2, 3), (3, 3))
