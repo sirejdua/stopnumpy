@@ -1,12 +1,12 @@
 import z3
 import numpy as np
-
+from components import Components
 # OGIS
 
 def ogis(oracle):
     ex_set = {}
 
-    components = {'transpose': 0, 'eye-like': 0, 'ones-like': 0, 'multiply': 0, 'add': 0}
+    components = Components({'transpose': 0, 'eye_like': 0, 'ones_like': 0, 'multiply': 0, 'add': 0, 'matmul': 0})
 
     example = np.ones((2,2))
 
@@ -16,13 +16,17 @@ def ogis(oracle):
         program_candidate = synthesize(ex_set, components)
 
         if program_candidate is None:
-            #change components?
-            pass
+            pass #change components?
 
 
         example = find_dist_constraint(ex_set, program_candidate, components)
 
 def synthesize(examples, components):
+    # Assume components is a list of <\vec{I},O,phi>
+    num_comp = len(components)
+    [1, ..., num_comp]
+
+
     return None
 
 def find_dist_constraint(examples, program_candidate, components):
