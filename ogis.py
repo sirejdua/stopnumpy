@@ -24,10 +24,23 @@ def ogis(oracle):
 def synthesize(examples, components):
     # Assume components is a list of <\vec{I},O,phi>
     num_comp = len(components)
-    [1, ..., num_comp]
+    #[0, ..., num_comp-1]
+    pi = [z3.Int(f"pi_{i}") for i in range(num_comp)]
+    pi_range = [z3.And(0 <= x, x < num_comp) for x in pi]
+    ordering = z3.Distinct(pi)
+    for i in range(len(components)):
+        f_i_constraints = sum(LLeq(
+        ########## thing from whiteboard
+
+        # I_pi_i = A1 | ... | I_pi_i = Am | ( |_{k=0,...n-1} (I_pi_i = Ok and k < pi[i]))
+
 
 
     return None
+
+def LLeq(l1, l2):
+    constraint_lst = [l1[i][j] == l2[i][j] for j in range(len(l1[0])) for i in range(len(l1))]
+    return constraint_lst
 
 def find_dist_constraint(examples, program_candidate, components):
     return None
