@@ -4,7 +4,7 @@ class Components:
     component_num = 0
     components = []
 
-    def __init__(counter):
+    def __init__(self, counter):
         for component, num in counter.items():
             for _ in range(num):
                 components.append(getattr(Components, component))
@@ -78,7 +78,3 @@ class Components:
         return (I, O, phi)
 
 
-component = Components()
-while True:
-    print(component.get_name())
-    input()
