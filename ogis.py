@@ -29,11 +29,12 @@ def synthesize(examples, components):
     pi_range = [z3.And(0 <= x, x < num_comp) for x in pi]
     ordering = z3.Distinct(pi)
     for i in range(len(components)):
-        f_i_constraints = sum(LLeq(
+        f_i_constraints = sum(LLeq())
         ########## thing from whiteboard
 
         # I_pi_i = A1 | ... | I_pi_i = Am | ( |_{k=0,...n-1} (I_pi_i = Ok and k < pi[i]))
 
+        # LLeq(I_pi_i, A1) or ... or LLeq(I_pi_i, Am) or (I_pi_i = O0 and 0 < pi[i]) or (I_pi_i = O1 and 1 < pi[i]) or (I_pi_i = O2 and 2 < pi[i]) or ... or (I_pi_i = On and n-1 < pi[i])
 
 
     return None
