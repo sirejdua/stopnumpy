@@ -28,7 +28,7 @@ def synthesize(examples, components):
     pi = [z3.Int(f"pi_{i}") for i in range(num_comp)]
     pi_range = [z3.And(0 <= x, x < num_comp) for x in pi]
     ordering = z3.Distinct(pi)
-    for i in range(len(components)):
+    for i in range(num_comp):
         f_i_constraints = sum(LLeq())
         ########## thing from whiteboard
 
