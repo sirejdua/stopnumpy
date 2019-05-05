@@ -68,11 +68,11 @@ def valid_on_examples(examples, components):
     shape = examples[0][0].shape
     example_constraints = []
     for i,o in examples:
+        i = [x.tolist() for x in i]
+        o = [x.tolist() for x in o]
         arg = [[z3.Int(f"arg_{i}_{j}") for i in range(shape[0])] for j in range(shape[1])]
-        ieq = LLeq(i, arg)
-        oeq = LLeq(o, components[-1][1])
-        print(ieq)
-        print(oeq)
+        ieq = z3.And(*LLeq(i, arg))
+        oeq = z3.And(*LLeq(o, components[-1][1]))
         example_constraints.append(z3.Implies(ieq, oeq))
     return example_constraints
 
