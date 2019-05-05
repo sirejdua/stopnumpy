@@ -1,6 +1,7 @@
 import z3
 import numpy as np
 from components import Components
+import pdb
 # OGIS
 
 def ogis(oracle):
@@ -27,6 +28,7 @@ def synthesize(examples, components):
     s.add(valid_program_constraint(examples, components))
     # Add in the phi constraint
     s.add(valid_on_examples(examples, components))
+    pdb.set_trace()
 
     if (s.check() == z3.sat):
         # This code is for interpreting a model into a program
@@ -90,7 +92,7 @@ def valid_program_constraint(examples, components):
         Ivec, O, phi = components[i]
         for I_pi_i in Ivec:
             arg_constraint = LLeq(I_pi_i, arg)
-            o_constraints = z3.Or(*[LLeq(I_pi_i, components[j][1]) + [j < pi[i]] for j in range(num_comp)])
+            o_constraints = z3.And(*[LLeq(I_pi_i, components[j][1]) + [j < pi[i]] for j in range(num_comp)])
             constraints.append(z3.Or(*arg_constraint, o_constraints))
         ########## thing from whiteboard
 
@@ -100,7 +102,7 @@ def valid_program_constraint(examples, components):
 
     # + means list concat
     output = [[z3.Int(f"output_{i}_{j}") for i in range(shape[0])] for j in range(shape[1])]
-    output_of_last_is_function_output = z3.Or(*[LLeq(output, components[j][1]) + [j == pi[num_comp-1]] for j in range(num_comp)]) 
+    output_of_last_is_function_output = z3.Or(*[z3.And(LLeq(output, components[j][1]) + [j == pi[num_comp-1]]) for j in range(num_comp)]) 
 
     all_constraints = pi_range + [ordering] + constraints + [output_of_last_is_function_output]
     return all_constraints
@@ -132,11 +134,12 @@ def test_synthesize():
 
     ex_set = []
     example = np.array([1,2,3,4]).reshape((2,2))
+    example = np.array([[1]]) 
     ex_set.append((example, oracle(example)))
 
     input_shape = example.shape
 
-    components = Components({'transpose': 1, 'eye_like': 0, 'ones_like': 0, 'multiply': 0, 'add': 0, 'matmul': 0}, input_shape).get_list()
+    components = Components({'transpose': 0, 'eye_like': 0, 'ones_like': 0, 'multiply': 0, 'add': 1, 'matmul': 0}, input_shape).get_list()
 
     program = synthesize(ex_set, components)
     print(program)
