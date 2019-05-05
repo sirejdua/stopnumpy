@@ -22,6 +22,17 @@ def ogis(oracle):
         example = find_dist_constraint(ex_set, program_candidate, components)
 
 def synthesize(examples, components):
+    # ask z3 to find the valid model
+    s = z3.Solver()
+    s.add(valid_program_constraint(examples, components))
+    num_comp = len(components)
+    if (s.check() == sat):
+        m = s.model()
+        r = [ [ m.evaluate(z3.Int(f"pi_{i}")) for i in range(num_comp)]]
+        print(r)
+    return r
+
+def valid_program_constraint(examples, components):
     # Assume components is a list of <\vec{I},O,phi>
     num_comp = len(components)
     #[0, ..., num_comp-1]
@@ -32,10 +43,10 @@ def synthesize(examples, components):
     constraints = []
     for i in range(num_comp):
         Ivec, O, phi = components[i]
-        arg_constraint = LLeq(I_pi_i, arg)
-        o_constraints = z3.Or(*[LLeq(I_pi_i, components[j][1]) + [j < pi[i]] for j in range(num_comp)])
-        constraints.append(z3.Or(arg_constraint, o_constraints))
-
+        for I_pi_i in Ivec:
+            arg_constraint = LLeq(I_pi_i, arg)
+            o_constraints = z3.Or(*[LLeq(I_pi_i, components[j][1]) + [j < pi[i]] for j in range(num_comp)])
+            constraints.append(z3.Or(arg_constraint, o_constraints))
         ########## thing from whiteboard
 
         # I_pi_i = A1 | ... | I_pi_i = Am | ( |_{k=0,...n-1} (I_pi_i = Ok and k < pi[i]))
@@ -47,8 +58,7 @@ def synthesize(examples, components):
     output_of_last_is_function_output = z3.Or(*[LLeq(fn_output, components[j][1]) + [j == pi[n-1]] for j in range(num_comp)])
 
     all_constraints = pi_range + ordering + constraints + [output_of_last_is_function_output]
-
-    return None
+    return all_constraints
 
 def LLeq(l1, l2):
     constraint_lst = [l1[i][j] == l2[i][j] for j in range(len(l1[0])) for i in range(len(l1))]
