@@ -64,7 +64,13 @@ def interpret_model(model, examples, components):
 
 def valid_on_examples(examples, components):
     # do something with phi 
-    return []
+    example_constraints = []
+    for i,o in examples:
+        arg = [[m.evaluate(z3.Int(f"arg_{i}_{j}")) for i in range(examples[0])] for j in range(examples[0][0])]
+        ieq = LLeq(arg, i)
+        oeq = LLeq(components[-1][1], o)
+        example_constraints.append(z3.Implies(ieq, oeq))
+    return example_constraints
 
 def valid_program_constraint(examples, components):
     # Assume components is a list of <\vec{I},O,phi>
