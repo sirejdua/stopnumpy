@@ -36,6 +36,7 @@ def synthesize(examples, components):
         m = s.model()
         return interpret_model(m, examples, components)
     else:
+        print("NOT SAT")
         return False
 
 def interpret_model(model, examples, components):
@@ -70,6 +71,7 @@ def valid_on_examples(examples, components):
     shape = examples[0][0].shape
     example_constraints = []
     for i,o in examples:
+        pdb.set_trace()
         i = [x.tolist() for x in i]
         o = [x.tolist() for x in o]
         arg = [[z3.Int(f"arg_{i}_{j}") for i in range(shape[0])] for j in range(shape[1])]
@@ -88,8 +90,10 @@ def valid_program_constraint(examples, components):
     ordering = z3.Distinct(pi)
     arg = [[z3.Int(f"arg_{i}_{j}") for i in range(shape[0])] for j in range(shape[1])]
     constraints = []
+    semantics = []
     for i in range(num_comp):
         Ivec, O, phi = components[i]
+        semantics = semantics + phi
         for I_pi_i in Ivec:
             arg_constraint = LLeq(I_pi_i, arg)
             o_constraints = z3.And(*[LLeq(I_pi_i, components[j][1]) + [j < pi[i]] for j in range(num_comp)])
@@ -104,7 +108,7 @@ def valid_program_constraint(examples, components):
     output = [[z3.Int(f"output_{i}_{j}") for i in range(shape[0])] for j in range(shape[1])]
     output_of_last_is_function_output = z3.Or(*[z3.And(LLeq(output, components[j][1]) + [j == pi[num_comp-1]]) for j in range(num_comp)]) 
 
-    all_constraints = pi_range + [ordering] + constraints + [output_of_last_is_function_output]
+    all_constraints = pi_range + [ordering] + constraints + [output_of_last_is_function_output] + semantics
     return all_constraints
 
 def LLeq(l1, l2):
