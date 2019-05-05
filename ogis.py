@@ -25,12 +25,41 @@ def synthesize(examples, components):
     # ask z3 to find the valid model
     s = z3.Solver()
     s.add(valid_program_constraint(examples, components))
+    # Add in the phi constraint
+    s.add(valid_on_examples(examples, components))
+
     num_comp = len(components)
     if (s.check() == sat):
+        # This code is for interpreting a model into a program
+        # maybe this can move to a helper since it can be used in other places
         m = s.model()
-        r = [ [ m.evaluate(z3.Int(f"pi_{i}")) for i in range(num_comp)]]
-        print(r)
-    return r
+        r = [m.evaluate(z3.Int(f"pi_{i}")) for i in range(num_comp)]
+        arg = [[m.evaluate(z3.Int(f"arg_{i}_{j}")) for i in range(examples[0])] for j in range(examples[0][0])]
+        inputs = [ [ [[ m.evaluate(v) for v in irow] for irow in I]  for I in Ivec]    for Ivec,_,_ in components]
+        outputs = [ [ [ m.evaluate(v) for v in orow] for orow in O]    for _,O,_ in components]
+
+        #Link each input to one of the outputs
+        prog = []
+        for i in range(num_comp):
+            args = []
+            for in_eval in inputs[r[i]]:
+                input_to_component = None
+                if all(LLeq(in_eval, arg)):
+                    input_to_component = "arg"
+                else:
+                    for j in range(r[i]):
+                        if all(LLeq(in_eval, outputs[j])):
+                            input_to_component = f"output{j}"
+                            break
+                args.append(input_to_component)
+            prog.append((r[i], args))
+        return prog
+    else:
+        return False
+
+def valid_on_examples(examples, components):
+    # do something with phi 
+    return []
 
 def valid_program_constraint(examples, components):
     # Assume components is a list of <\vec{I},O,phi>
@@ -64,13 +93,18 @@ def LLeq(l1, l2):
     constraint_lst = [l1[i][j] == l2[i][j] for j in range(len(l1[0])) for i in range(len(l1))]
     return constraint_lst
 
+def all(ll):
+    bo = True
+    for l in ll:
+        for b in l:
+            bo = bo and b
+    return bo
+
 def find_dist_constraint(examples, program_candidate, components):
     return None
 
-
 def main():
     return ogis(somefunc)
-
 
 if __name__ == '__main__':
     main()
