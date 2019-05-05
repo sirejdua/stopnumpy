@@ -47,7 +47,7 @@ def valid_program_constraint(examples, components):
         for I_pi_i in Ivec:
             arg_constraint = LLeq(I_pi_i, arg)
             o_constraints = z3.Or(*[LLeq(I_pi_i, components[j][1]) + [j < pi[i]] for j in range(num_comp)])
-            constraints.append(z3.Or(arg_constraint, o_constraints))
+            constraints.append(z3.Or(*arg_constraint, o_constraints))
         ########## thing from whiteboard
 
         # I_pi_i = A1 | ... | I_pi_i = Am | ( |_{k=0,...n-1} (I_pi_i = Ok and k < pi[i]))
@@ -56,7 +56,7 @@ def valid_program_constraint(examples, components):
 
     # + means list concat
     output = [[z3.Int(f"output_{i}_{j}") for i in range(shape[0])] for j in range(shape[1])]
-    output_of_last_is_function_output = z3.Or(*[LLeq(fn_output, components[j][1]) + [j == pi[n-1]] for j in range(num_comp)])
+    output_of_last_is_function_output = z3.Or(*[LLeq(fn_output, components[j][1]) + [j == pi[n-1]] for j in range(num_comp)]) # TODO: fn_output -> output?, n?
 
     all_constraints = pi_range + ordering + constraints + [output_of_last_is_function_output]
     return all_constraints
