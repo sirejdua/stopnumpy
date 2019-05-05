@@ -28,34 +28,39 @@ def synthesize(examples, components):
     # Add in the phi constraint
     s.add(valid_on_examples(examples, components))
 
-    num_comp = len(components)
     if (s.check() == sat):
         # This code is for interpreting a model into a program
         # maybe this can move to a helper since it can be used in other places
         m = s.model()
-        r = [m.evaluate(z3.Int(f"pi_{i}")) for i in range(num_comp)]
-        arg = [[m.evaluate(z3.Int(f"arg_{i}_{j}")) for i in range(examples[0])] for j in range(examples[0][0])]
-        inputs = [ [ [[ m.evaluate(v) for v in irow] for irow in I]  for I in Ivec]    for Ivec,_,_ in components]
-        outputs = [ [ [ m.evaluate(v) for v in orow] for orow in O]    for _,O,_ in components]
-
-        #Link each input to one of the outputs
-        prog = []
-        for i in range(num_comp):
-            args = []
-            for in_eval in inputs[r[i]]:
-                input_to_component = None
-                if all(LLeq(in_eval, arg)):
-                    input_to_component = "arg"
-                else:
-                    for j in range(r[i]):
-                        if all(LLeq(in_eval, outputs[j])):
-                            input_to_component = f"output{j}"
-                            break
-                args.append(input_to_component)
-            prog.append((r[i], args))
-        return prog
+        return interpret_model(m, examples, components)
     else:
         return False
+
+def interpret_model(model, examples, components):
+    num_comp = len(components)
+    r = [m.evaluate(z3.Int(f"pi_{i}")) for i in range(num_comp)]
+    arg = [[m.evaluate(z3.Int(f"arg_{i}_{j}")) for i in range(examples[0])] for j in range(examples[0][0])]
+    inputs = [ [ [[ m.evaluate(v) for v in irow] for irow in I]  for I in Ivec]    for Ivec,_,_ in components]
+    outputs = [ [ [ m.evaluate(v) for v in orow] for orow in O]    for _,O,_ in components]
+
+    #Link each input to one of the outputs
+    prog = []
+    for i in range(num_comp):
+        args = []
+        for in_eval in inputs[r[i]]:
+            input_to_component = None
+            if all(LLeq(in_eval, arg)):
+                input_to_component = "arg"
+            else:
+                for j in range(r[i]):
+                    if all(LLeq(in_eval, outputs[j])):
+                        input_to_component = f"output{j}"
+                        break
+            args.append(input_to_component)
+        prog.append((r[i], args))
+    return prog
+
+
 
 def valid_on_examples(examples, components):
     # do something with phi 
