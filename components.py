@@ -2,12 +2,16 @@ import z3
 
 class Components:
     component_num = 0
-    components = []
+    components_list = []
 
-    def __init__(self, counter):
+    def __init__(self, counter, input_shape):
         for component, num in counter.items():
             for _ in range(num):
-                components.append(getattr(Components, component))
+                print(input_shape)
+                self.components_list.append(getattr(Components, component)(self, input_shape))
+    
+    def get_list(self):
+        return self.components_list
 
     def get_name(self):
         self.component_num += 1
@@ -76,5 +80,6 @@ class Components:
                     n += I[0][row][inner] * I[1][inner][col]
                 phi.append(z3.And(O[row][col] == n))
         return (I, O, phi)
+
 
 
