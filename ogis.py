@@ -28,7 +28,7 @@ def synthesize(examples, components):
     # Add in the phi constraint
     s.add(valid_on_examples(examples, components))
 
-    if (s.check() == sat):
+    if (s.check() == z3.sat):
         # This code is for interpreting a model into a program
         # maybe this can move to a helper since it can be used in other places
         m = s.model()
@@ -38,21 +38,22 @@ def synthesize(examples, components):
 
 def interpret_model(model, examples, components):
     num_comp = len(components)
-    r = [m.evaluate(z3.Int(f"pi_{i}")) for i in range(num_comp)]
-    arg = [[m.evaluate(z3.Int(f"arg_{i}_{j}")) for i in range(examples[0])] for j in range(examples[0][0])]
-    inputs = [ [ [[ m.evaluate(v) for v in irow] for irow in I]  for I in Ivec]    for Ivec,_,_ in components]
-    outputs = [ [ [ m.evaluate(v) for v in orow] for orow in O]    for _,O,_ in components]
+    shape = examples[0][0].shape
+    r = [model.evaluate(z3.Int(f"pi_{i}")) for i in range(num_comp)]
+    arg = [[model.evaluate(z3.Int(f"arg_{i}_{j}")) for i in range(shape[0])] for j in range(shape[1])]
+    inputs = [ [ [[ model.evaluate(v) for v in irow] for irow in I]  for I in Ivec]    for Ivec,_,_ in components]
+    outputs = [ [ [ model.evaluate(v) for v in orow] for orow in O]    for _,O,_ in components]
 
     #Link each input to one of the outputs
     prog = []
     for i in range(num_comp):
         args = []
-        for in_eval in inputs[r[i]]:
+        for in_eval in inputs[r[i].as_long()]:
             input_to_component = None
             if all(LLeq(in_eval, arg)):
                 input_to_component = "arg"
             else:
-                for j in range(r[i]):
+                for j in range(r[i].as_long()):
                     if all(LLeq(in_eval, outputs[j])):
                         input_to_component = f"output{j}"
                         break
@@ -92,7 +93,7 @@ def valid_program_constraint(examples, components):
     output = [[z3.Int(f"output_{i}_{j}") for i in range(shape[0])] for j in range(shape[1])]
     output_of_last_is_function_output = z3.Or(*[LLeq(output, components[j][1]) + [j == pi[num_comp-1]] for j in range(num_comp)]) 
 
-    all_constraints = pi_range + ordering + constraints + [output_of_last_is_function_output]
+    all_constraints = pi_range + [ordering] + constraints + [output_of_last_is_function_output]
     return all_constraints
 
 def LLeq(l1, l2):
@@ -102,8 +103,11 @@ def LLeq(l1, l2):
 def all(ll):
     bo = True
     for l in ll:
-        for b in l:
-            bo = bo and b
+        if type(l) == list:
+            for b in l:
+                bo = bo and b
+        else:
+            bo = bo and l
     return bo
 
 def find_dist_constraint(examples, program_candidate, components):
@@ -126,6 +130,7 @@ def test_synthesize():
     components = Components({'transpose': 1, 'eye_like': 0, 'ones_like': 0, 'multiply': 0, 'add': 0, 'matmul': 0}, input_shape).get_list()
 
     program = synthesize(ex_set, components)
+    print(program)
 
 if __name__ == '__main__':
     main()

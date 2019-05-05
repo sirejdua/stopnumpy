@@ -7,7 +7,6 @@ class Components:
     def __init__(self, counter, input_shape):
         for component, num in counter.items():
             for _ in range(num):
-                print(input_shape)
                 self.components_list.append(getattr(Components, component)(self, input_shape))
     
     def get_list(self):
