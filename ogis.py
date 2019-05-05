@@ -28,14 +28,25 @@ def synthesize(examples, components):
     pi = [z3.Int(f"pi_{i}") for i in range(num_comp)]
     pi_range = [z3.And(0 <= x, x < num_comp) for x in pi]
     ordering = z3.Distinct(pi)
+    arg = [[z3.Int(f"arg_{i}_{j}") for i in range(examples[0])] for j in range(examples[0][0])]
+    constraints = []
     for i in range(num_comp):
-        f_i_constraints = sum(LLeq())
+        Ivec, O, phi = components[i]
+        arg_constraint = LLeq(I_pi_i, arg)
+        o_constraints = z3.Or(*[LLeq(I_pi_i, components[j][1]) + [j < pi[i]] for j in range(num_comp)])
+        constraints.append(z3.Or(arg_constraint, o_constraints))
+
         ########## thing from whiteboard
 
         # I_pi_i = A1 | ... | I_pi_i = Am | ( |_{k=0,...n-1} (I_pi_i = Ok and k < pi[i]))
 
         # LLeq(I_pi_i, A1) or ... or LLeq(I_pi_i, Am) or (I_pi_i = O0 and 0 < pi[i]) or (I_pi_i = O1 and 1 < pi[i]) or (I_pi_i = O2 and 2 < pi[i]) or ... or (I_pi_i = On and n-1 < pi[i])
 
+    # + means list concat
+    output = [[z3.Int(f"output_{i}_{j}") for i in range(examples[0])] for j in range(examples[0][0])]
+    output_of_last_is_function_output = z3.Or(*[LLeq(fn_output, components[j][1]) + [j == pi[n-1]] for j in range(num_comp)])
+
+    all_constraints = pi_range + ordering + constraints + [output_of_last_is_function_output]
 
     return None
 
