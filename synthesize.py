@@ -1,6 +1,7 @@
 from z3 import *
 import itertools
 from components import Components
+from examples.transpose import *
 
 class Formulate:
     # examples: list of (input, output) ndarray tuples with same size
@@ -128,6 +129,7 @@ def test():
     import numpy as np
 
     oracle = lambda x: x.T
+    oracle = transpose3
 
     ex_set = []
     example = np.array([[1, 2], [1, 2]])

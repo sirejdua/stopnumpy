@@ -18,7 +18,7 @@ def transpose2(M):
 def transpose3(M):
     lst = []
     for i in M:
-        lst.append(M[i])
+        lst.append(i)
     return np.array(lst).T
 
 def fast_transpose(M):
