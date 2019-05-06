@@ -90,10 +90,8 @@ def valid_program_constraint(examples, components):
     ordering = z3.Distinct(pi)
     arg = [[z3.Int(f"arg_{i}_{j}") for i in range(shape[0])] for j in range(shape[1])]
     constraints = []
-    semantics = []
     for i in range(num_comp):
         Ivec, O, phi = components[i]
-        semantics = semantics + phi
         for I_pi_i in Ivec:
             arg_constraint = LLeq(I_pi_i, arg)
             o_constraints = z3.And(*[LLeq(I_pi_i, components[j][1]) + [j < pi[i]] for j in range(num_comp)])
@@ -108,7 +106,7 @@ def valid_program_constraint(examples, components):
     output = [[z3.Int(f"output_{i}_{j}") for i in range(shape[0])] for j in range(shape[1])]
     output_of_last_is_function_output = z3.Or(*[z3.And(LLeq(output, components[j][1]) + [j == pi[num_comp-1]]) for j in range(num_comp)]) 
 
-    all_constraints = pi_range + [ordering] + constraints + [output_of_last_is_function_output] + semantics
+    all_constraints = pi_range + [ordering] + constraints + [output_of_last_is_function_output]
     return all_constraints
 
 def LLeq(l1, l2):
