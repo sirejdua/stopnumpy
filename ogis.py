@@ -64,8 +64,6 @@ def interpret_model(model, examples, components):
         prog.append((r[i], args))
     return prog
 
-
-
 def valid_on_examples(examples, components):
     # do something with phi 
     shape = examples[0][0].shape
@@ -88,25 +86,29 @@ def valid_program_constraint(examples, components):
     pi = [z3.Int(f"pi_{i}") for i in range(num_comp)]
     pi_range = [z3.And(0 <= x, x < num_comp) for x in pi]
     ordering = z3.Distinct(pi)
-    arg = [[z3.Int(f"arg_{i}_{j}") for i in range(shape[0])] for j in range(shape[1])]
+    #arg = [[z3.Int(f"arg_{i}_{j}") for i in range(shape[0])] for j in range(shape[1])]
+    num_args = 1
+    arg = z3.Int(f"L_0")
+    locations = [z3.Int(f"L_{i}") for i in range(num_comp + num_args)]
     constraints = []
     for i in range(num_comp):
         Ivec, O, phi = components[i]
         for I_pi_i in Ivec:
-            arg_constraint = LLeq(I_pi_i, arg)
-            o_constraints = z3.And(*[LLeq(I_pi_i, components[j][1]) + [j < pi[i]] for j in range(num_comp)])
-            constraints.append(z3.Or(*arg_constraint, o_constraints))
+            arg_constraints = []
+            for arg_loc in range(num_args):
+                arg_constraints.append(pi[i] + num_args == locations[arg_loc])
+
+            
+            o_constraints = [z3.And(pi[i] == locations[num_args+j], j < pi[i]+num_args) for j in range(num_comp)]
+            constraints.append(z3.Or(*(arg_constraints + o_constraints)))
         ########## thing from whiteboard
 
         # I_pi_i = A1 | ... | I_pi_i = Am | ( |_{k=0,...n-1} (I_pi_i = Ok and k < pi[i]))
 
         # LLeq(I_pi_i, A1) or ... or LLeq(I_pi_i, Am) or (I_pi_i = O0 and 0 < pi[i]) or (I_pi_i = O1 and 1 < pi[i]) or (I_pi_i = O2 and 2 < pi[i]) or ... or (I_pi_i = On and n-1 < pi[i])
 
-    # + means list concat
-    output = [[z3.Int(f"output_{i}_{j}") for i in range(shape[0])] for j in range(shape[1])]
-    output_of_last_is_function_output = z3.Or(*[z3.And(LLeq(output, components[j][1]) + [j == pi[num_comp-1]]) for j in range(num_comp)]) 
 
-    all_constraints = pi_range + [ordering] + constraints + [output_of_last_is_function_output]
+    all_constraints = pi_range + [ordering] + constraints
     return all_constraints
 
 def LLeq(l1, l2):
