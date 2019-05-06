@@ -5,7 +5,10 @@ from components import Components
 class Formulate:
     # examples: list of (input, output) ndarray tuples with same size
     # components: list of (i, o, phi(i,o)) triples as specified in components.py
-    def __init__(self, examples, components):
+    def __init__(self, examples, components, prefix=""):
+        self.examples = examples
+        self.components = components
+        self.prefix = prefix
         self.E = [(self.convert(i), self.convert(o)) for i,o in examples]
 
         self.I_i, self.R, phi_i = zip(*components)
@@ -18,7 +21,7 @@ class Formulate:
         
         # maps each component input and output and formal params and output to a symbolic int
         all_locs = list(itertools.chain(self.P, self.R))
-        self.L = {i: Int(f"L_{l}") for i, l in zip(all_locs, range(len(all_locs)))}
+        self.L = {i: Int(f"{self.prefix}L_{l}") for i, l in zip(all_locs, range(len(all_locs)))}
 
         self.sym_I = "T_FA"
         self.L[self.sym_I] = 0
@@ -66,7 +69,13 @@ class Formulate:
         return zip(funcs, args)
 
     def dist_constraint(self):
-        pass
+
+        I = tuple( tuple(z3.Int(f"IDC_{i}_{j}") for i in range(len(self.E[0]))) for j in range(len(self.E[0][0])))
+        O1 = tuple( tuple(z3.Int(f"ODC1_{i}_{j}") for i in range(len(self.E[1]))) for j in range(len(self.E[1][0])))
+        O2 = tuple( tuple(z3.Int(f"ODC2_{i}_{j}") for i in range(len(self.E[1]))) for j in range(len(self.E[1][0])))
+
+        F2 = Formulate(self.examples, self.components, "F2_")
+        return And(self.BehaveE(), F2.BehaveE(), self.phi_func(I, O1), F2.phi_func(I, O2), Not(LLeq(O1, O2)))
 
     def psi_cons(self):
         # return And(*[self.L[x] != self.L[y] for x in self.R for y in self.R if x != y])
