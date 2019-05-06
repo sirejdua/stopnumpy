@@ -82,7 +82,7 @@ class Formulate:
         return Distinct(*[self.L[x] for x in self.R])
 
     def psi_acyc(self):
-        return And(*[And(*[self.L[x] <= self.L[self.R[i]] for x in self.I_i[i]]) for i in range(self.N)])
+        return And(*[And(*[self.L[x] < self.L[self.R[i]] for x in self.I_i[i]]) for i in range(self.N)])
 
     def psi_wfp(self):
         return  And(And(*[And(0 <= self.L[x], self.L[x] < self.M) for x in self.P]),
