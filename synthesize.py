@@ -71,12 +71,12 @@ class Formulate:
 
     def dist_constraint(self):
 
-        I = tuple( tuple(z3.Int(f"IDC_{i}_{j}") for i in range(len(self.E[0]))) for j in range(len(self.E[0][0])))
-        O1 = tuple( tuple(z3.Int(f"ODC1_{i}_{j}") for i in range(len(self.E[1]))) for j in range(len(self.E[1][0])))
-        O2 = tuple( tuple(z3.Int(f"ODC2_{i}_{j}") for i in range(len(self.E[1]))) for j in range(len(self.E[1][0])))
+        I = tuple( tuple(z3.Int(f"IDC_{i}_{j}") for i in range(len(self.E[0][0]))) for j in range(len(self.E[0][0][0])))
+        O1 = tuple( tuple(z3.Int(f"ODC1_{i}_{j}") for i in range(len(self.E[0][1]))) for j in range(len(self.E[0][1][0])))
+        O2 = tuple( tuple(z3.Int(f"ODC2_{i}_{j}") for i in range(len(self.E[0][1]))) for j in range(len(self.E[0][1][0])))
 
         F2 = Formulate(self.examples, self.components, "F2_")
-        return And(self.BehaveE(), F2.BehaveE(), self.phi_func(I, O1), F2.phi_func(I, O2), Not(LLeq(O1, O2)))
+        return I, And(self.Behave_E(), F2.Behave_E(), self.phi_func(I, O1), F2.phi_func(I, O2), Not(self.LLeq(O1, O2)))
 
     def psi_cons(self):
         # return And(*[self.L[x] != self.L[y] for x in self.R for y in self.R if x != y])

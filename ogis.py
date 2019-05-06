@@ -1,26 +1,45 @@
 import z3
 import numpy as np
 from components import Components
+from  synthesize import Formulate
 import pdb
 # OGIS
 
 def ogis(oracle):
     ex_set = []
+    ishape = (2,2)
 
-    components = Components({'transpose': 0, 'eye_like': 0, 'ones_like': 0, 'multiply': 0, 'add': 0, 'matmul': 0})
+    components = Components({'transpose': 0, 'eye_like': 1, 'ones_like': 0, 'multiply': 0, 'add': 1, 'matmul': 0}, ishape)
 
-    example = np.ones((2,2))
+    example = np.eye(ishape[0])
+
+    program_candidate = None
 
     while example is not None:
         ex_set.append((example, oracle(example)))
 
-        program_candidate = synthesize(ex_set, components)
+        f = Formulate(ex_set, components.get_list())
+        satisfying_constraints = f.Behave_E()
+        s = z3.Solver()
+        s.add(satisfying_constraints)
+        if (s.check() == z3.sat):
+            I, unique_constraints = f.dist_constraint()
+            s2 = z3.Solver()
+            s2.add(unique_constraints)
+            if (s2.check() == z3.sat):
+                print("nonunique; getting new example")
+                model = s2.model()
+                example = np.array([[model.evaluate(i) for i in il] for il in I])
+            else:
+                print("unsat")
+                #done
+                program_candidate = f.Lval2Prog(s.model(), components)
+                break
+        else:
+            print("No valid program candidate found")
+            return False
+    return program_candidate
 
-        if program_candidate is None:
-            pass #change components?
-
-
-        example = find_dist_constraint(ex_set, program_candidate, components)
 
 def synthesize(examples, components):
     # ask z3 to find the valid model
@@ -53,7 +72,7 @@ def interpret_model(model, examples, components):
         args = []
         for in_eval in inputs[r[i].as_long()]:
             input_to_component = None
-            if all(LLeq(in_eval, arg)):
+            if all(self.LLeq(in_eval, arg)):
                 input_to_component = "arg"
             else:
                 for j in range(r[i].as_long()):
@@ -138,7 +157,10 @@ def main():
 
 
 def test_synthesize():
-    oracle = lambda x: x.T
+    oracle = lambda x: x + x
+    ogis(oracle)
+
+    return
 
     ex_set = []
     example = np.array([1,2,3,4]).reshape((2,2))
