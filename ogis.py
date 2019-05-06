@@ -91,9 +91,13 @@ def valid_program_constraint(examples, components):
     arg = z3.Int(f"L_0")
     locations = [z3.Int(f"L_{i}") for i in range(num_comp + num_args)]
     constraints = []
+    loc_constraints = []
+
     for i in range(num_comp):
         Ivec, O, phi = components[i]
-        for I_pi_i in Ivec:
+        for j in range(len(Ivec)):
+            loc_i_j = z3.Int("L_{i}_{j}")
+            loc_constraints.append(z3.And(loc_i_j >= 0, loc_i_j < num_args + num_comp))
             arg_constraints = []
             for arg_loc in range(num_args):
                 arg_constraints.append(pi[i] + num_args == locations[arg_loc])
