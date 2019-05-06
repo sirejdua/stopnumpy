@@ -26,9 +26,9 @@ class Components:
         for row in range(shape[0]):
             for col in range(shape[1]):
                 if row == col:
-                    phi.append(z3.And(O[row][col] == z3.Int(1)))
+                    phi.append(z3.And(O[row][col] == 1))
                 else:
-                    phi.append(z3.And(O[row][col] == z3.Int(0)))
+                    phi.append(z3.And(O[row][col] == 0))
         return (I, O, z3.And(*phi))
     
     def ones_like(self, shape):
@@ -37,7 +37,7 @@ class Components:
         phi = []
         for row in range(shape[0]):
             for col in range(shape[1]):
-                phi.append(z3.And(O[row][col] == z3.Int(1)))
+                phi.append(z3.And(O[row][col] == 1))
         return (I, O, z3.And(*phi))
 
     def transpose(self, shape):
@@ -77,7 +77,7 @@ class Components:
         phi = []
         for row in range(shape1[0]): # match output dimensions
             for col in range(shape1[1]):
-                n = z3.Int(0)
+                n = 0 
                 for inner in range(shape1[1]):
                     n += I[0][row][inner] * I[1][inner][col]
                 phi.append(z3.And(O[row][col] == n))
