@@ -73,7 +73,7 @@ class Components:
         #assert shape1[1] == shape2[0]
         I = (tuple(tuple(z3.Int(self.get_name()) for j in range(shape1[1])) for i in range(shape1[0])),
              tuple(tuple(z3.Int(self.get_name()) for j in range(shape1[1])) for i in range(shape1[0])))
-        O = [[z3.Int(self.get_name()) for j in range(shape1[1])] for i in range(shape1[0])]
+        O = tuple(tuple(z3.Int(self.get_name()) for j in range(shape1[1])) for i in range(shape1[0]))
         phi = []
         for row in range(shape1[0]): # match output dimensions
             for col in range(shape1[1]):
