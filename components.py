@@ -1,4 +1,4 @@
-import z3
+from z3 import *
 
 class Components:
     component_num = -1
@@ -20,68 +20,68 @@ class Components:
         return f"T_{self.component_num}"
 
     def eye_like(self, shape):
-        I = (tuple(tuple(z3.Int(self.get_name()) for j in range(shape[1])) for i in range(shape[0])),) # row major
-        O = tuple(tuple(z3.Int(self.get_name()) for j in range(shape[1])) for i in range(shape[0]))
+        I = (tuple(tuple(Int(self.get_name()) for j in range(shape[1])) for i in range(shape[0])),) # row major
+        O = tuple(tuple(Int(self.get_name()) for j in range(shape[1])) for i in range(shape[0]))
         phi = []
         for row in range(shape[0]):
             for col in range(shape[1]):
                 if row == col:
-                    phi.append(z3.And(O[row][col] == 1))
+                    phi.append(And(O[row][col] == 1))
                 else:
-                    phi.append(z3.And(O[row][col] == 0))
-        return (I, O, z3.And(*phi))
+                    phi.append(And(O[row][col] == 0))
+        return (I, O, And(*phi))
     
     def ones_like(self, shape):
-        I = (tuple(tuple(z3.Int(self.get_name()) for j in range(shape[1])) for i in range(shape[0])),)
-        O = tuple(tuple(z3.Int(self.get_name()) for j in range(shape[1])) for i in range(shape[0]))
+        I = (tuple(tuple(Int(self.get_name()) for j in range(shape[1])) for i in range(shape[0])),)
+        O = tuple(tuple(Int(self.get_name()) for j in range(shape[1])) for i in range(shape[0]))
         phi = []
         for row in range(shape[0]):
             for col in range(shape[1]):
-                phi.append(z3.And(O[row][col] == 1))
-        return (I, O, z3.And(*phi))
+                phi.append(And(O[row][col] == 1))
+        return (I, O, And(*phi))
 
     def transpose(self, shape):
-        I = (tuple(tuple(z3.Int(self.get_name()) for j in range(shape[1])) for i in range(shape[0])),)
-        O = tuple(tuple(z3.Int(self.get_name()) for i in range(shape[0])) for j in range(shape[1]))
+        I = (tuple(tuple(Int(self.get_name()) for j in range(shape[1])) for i in range(shape[0])),)
+        O = tuple(tuple(Int(self.get_name()) for i in range(shape[0])) for j in range(shape[1]))
         phi = []
         for row in range(shape[0]):
             for col in range(shape[1]):
-                phi.append(z3.And(O[col][row] == I[0][row][col]))
-        return (I, O, z3.And(*phi))
+                phi.append(And(O[col][row] == I[0][row][col]))
+        return (I, O, And(*phi))
 
     def multiply(self, shape):
-        I = (tuple(tuple(z3.Int(self.get_name()) for j in range(shape[1])) for i in range(shape[0])),
-             tuple(tuple(z3.Int(self.get_name()) for j in range(shape[1])) for i in range(shape[0])))
-        O = tuple(tuple(z3.Int(self.get_name()) for j in range(shape[1])) for i in range(shape[0]))
+        I = (tuple(tuple(Int(self.get_name()) for j in range(shape[1])) for i in range(shape[0])),
+             tuple(tuple(Int(self.get_name()) for j in range(shape[1])) for i in range(shape[0])))
+        O = tuple(tuple(Int(self.get_name()) for j in range(shape[1])) for i in range(shape[0]))
         phi = []
         for row in range(shape[0]):
             for col in range(shape[1]):
-                phi.append(z3.And(O[row][col] == I[0][row][col] * I[1][row][col]))
-        return (I, O, z3.And(*phi))
+                phi.append(And(O[row][col] == I[0][row][col] * I[1][row][col]))
+        return (I, O, And(*phi))
 
     def add(self, shape):
-        I = (tuple(tuple(z3.Int(self.get_name()) for j in range(shape[1])) for i in range(shape[0])),
-             tuple(tuple(z3.Int(self.get_name()) for j in range(shape[1])) for i in range(shape[0])))
-        O = tuple(tuple(z3.Int(self.get_name()) for j in range(shape[1])) for i in range(shape[0]))
+        I = (tuple(tuple(Int(self.get_name()) for j in range(shape[1])) for i in range(shape[0])),
+             tuple(tuple(Int(self.get_name()) for j in range(shape[1])) for i in range(shape[0])))
+        O = tuple(tuple(Int(self.get_name()) for j in range(shape[1])) for i in range(shape[0]))
         phi = []
         for row in range(shape[0]):
             for col in range(shape[1]):
-                phi.append(z3.And(O[row][col] == I[0][row][col] + I[1][row][col]))
-        return (I, O, z3.And(*phi))
+                phi.append(And(O[row][col] == I[0][row][col] + I[1][row][col]))
+        return (I, O, And(*phi))
 
     def matmul(self, shape1):
         #assert shape1[1] == shape2[0]
-        I = (tuple(tuple(z3.Int(self.get_name()) for j in range(shape1[1])) for i in range(shape1[0])),
-             tuple(tuple(z3.Int(self.get_name()) for j in range(shape1[1])) for i in range(shape1[0])))
-        O = tuple(tuple(z3.Int(self.get_name()) for j in range(shape1[1])) for i in range(shape1[0]))
+        I = (tuple(tuple(Int(self.get_name()) for j in range(shape1[1])) for i in range(shape1[0])),
+             tuple(tuple(Int(self.get_name()) for j in range(shape1[1])) for i in range(shape1[0])))
+        O = tuple(tuple(Int(self.get_name()) for j in range(shape1[1])) for i in range(shape1[0]))
         phi = []
         for row in range(shape1[0]): # match output dimensions
             for col in range(shape1[1]):
                 n = 0 
                 for inner in range(shape1[1]):
                     n += I[0][row][inner] * I[1][inner][col]
-                phi.append(z3.And(O[row][col] == n))
-        return (I, O, z3.And(*phi))
+                phi.append(And(O[row][col] == n))
+        return (I, O, And(*phi))
 
 
 
