@@ -10,6 +10,7 @@ def ogis(oracle):
     ishape = (2,2)
 
     components = Components({'transpose': 0, 'eye_like': 1, 'ones_like': 0, 'multiply': 0, 'add': 1, 'matmul': 0}, ishape)
+    ex_set.append((np.ones((2,2)), oracle(np.ones((2,2)))))
 
     example = np.eye(ishape[0])
 
